@@ -1,6 +1,6 @@
+import json
 from collections.abc import Sequence
 from datetime import datetime
-import json
 from typing import Any
 
 from src.clients.asyncpg_client import AsyncPGClient
@@ -72,9 +72,7 @@ class PGStore:
                 user_traits_json,
             )
 
-    async def get_latest_event(
-        self, *, user_id: str, event_type: str
-    ) -> dict[str, Any] | None:
+    async def get_latest_event(self, *, user_id: str, event_type: str) -> dict[str, Any] | None:
         query = """
         SELECT user_id, event_type, event_timestamp, properties, user_traits, created_at
         FROM events

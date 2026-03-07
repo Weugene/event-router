@@ -3,7 +3,6 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-
 ChannelType = Literal["email", "sms", "internal_alert"]
 DecisionStatus = Literal["sent", "suppressed"]
 

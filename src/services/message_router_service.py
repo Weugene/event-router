@@ -103,10 +103,14 @@ class MessageRouterService:
         reason: str,
     ) -> None:
         if channel == "email":
-            await self._email_notifier.send(user_id=user_id, template_name=template_name, reason=reason)
+            await self._email_notifier.send(
+                user_id=user_id, template_name=template_name, reason=reason
+            )
             return
         if channel == "sms":
-            await self._sms_notifier.send(user_id=user_id, template_name=template_name, reason=reason)
+            await self._sms_notifier.send(
+                user_id=user_id, template_name=template_name, reason=reason
+            )
             return
         if channel == "internal_alert":
             logger.warning(

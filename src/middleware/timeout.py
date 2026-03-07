@@ -14,7 +14,7 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
             return await asyncio.wait_for(call_next(request), timeout=self.timeout_seconds)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return JSONResponse(
                 status_code=HTTP_504_GATEWAY_TIMEOUT,
                 content={"detail": "Request timeout"},

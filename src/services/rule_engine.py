@@ -112,7 +112,9 @@ class RuleEngine:
                     raise ValueError("Only event_within() call is allowed in conditions.")
 
         async def event_within(event_type: str, *, hours: int) -> bool:
-            previous_event = await self._store.get_latest_event(user_id=event.user_id, event_type=event_type)
+            previous_event = await self._store.get_latest_event(
+                user_id=event.user_id, event_type=event_type
+            )
             if previous_event is None:
                 return False
             previous_ts = previous_event["event_timestamp"]
@@ -146,7 +148,9 @@ class RuleEngine:
         if suppression_type == "none":
             return False, None
 
-        latest = await self._store.get_latest_sent_decision(user_id=user_id, template_name=template_name)
+        latest = await self._store.get_latest_sent_decision(
+            user_id=user_id, template_name=template_name
+        )
         if latest is None:
             return False, None
 
