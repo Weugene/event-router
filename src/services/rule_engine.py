@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+from src.app_types import AppLogger
 from src.clients.pg_store import PGStore
 from src.schemas import EventPayload
 
@@ -66,10 +67,11 @@ def _to_namespace(value: Any) -> Any:
 
 
 class RuleEngine:
-    def __init__(self, rules_file_path: str, store: PGStore) -> None:
+    def __init__(self, rules_file_path: str, store: PGStore, logger: AppLogger) -> None:
         """Load rule definitions and prepare rule lookup by trigger event."""
         self._rules_file_path = rules_file_path
         self._store = store
+        self.logger = logger
         self._rules_by_event: dict[str, list[Rule]] = self._load_rules()
 
     def get_rules_for_event(self, event_type: str) -> list[Rule]:
@@ -96,6 +98,11 @@ class RuleEngine:
                     )
                 )
             rules_by_event[event_type] = parsed_rules
+        self.logger.info(
+            "Loaded rules configuration | events=%s rules=%s",
+            len(rules_by_event),
+            sum(len(rules) for rules in rules_by_event.values()),
+        )
         return rules_by_event
 
     async def evaluate_rule(self, rule: Rule, event: EventPayload) -> bool:
@@ -136,8 +143,6 @@ class RuleEngine:
         context = {
             "json": _to_namespace(event.model_dump()),
             "event_within": event_within,
-            "True": True,
-            "False": False,
         }
         result = eval(compile(node, "<condition>", "eval"), {"__builtins__": {}}, context)
         if hasattr(result, "__await__"):

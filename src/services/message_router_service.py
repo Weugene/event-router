@@ -6,7 +6,7 @@ from src.clients.pg_store import PGStore
 from src.clients.sms_notifier import SmsNotifier
 from src.schemas import EventPayload
 from src.services.rule_engine import RuleEngine
-from src.settings.build_logger import logger
+from src.app_types import AppLogger
 
 
 class MessageRouterService:
@@ -24,7 +24,11 @@ class MessageRouterService:
         self._email_notifier = email_notifier
         self._sms_notifier = sms_notifier
 
-    async def process_event(self, payload: EventPayload) -> dict[str, Any]:
+    async def process_event(
+        self,
+        payload: EventPayload,
+        logger: AppLogger,
+    ) -> dict[str, Any]:
         """Persist an event, evaluate rules, and record resulting decisions."""
         event_timestamp_utc = self._to_utc(payload.event_timestamp)
         await self._store.insert_event(
@@ -40,6 +44,12 @@ class MessageRouterService:
         for rule in rules:
             is_match = await self._rule_engine.evaluate_rule(rule, payload)
             if not is_match:
+                logger.info(
+                    "Rule not matched | user_id=%s event_type=%s rule_name=%s",
+                    payload.user_id,
+                    payload.event_type,
+                    rule.name,
+                )
                 continue
 
             is_suppressed, suppression_reason = await self._rule_engine.evaluate_suppression(
@@ -51,11 +61,18 @@ class MessageRouterService:
 
             decision_status = "suppressed" if is_suppressed else "sent"
             if not is_suppressed:
+                logger.info(
+                    "Sending notification | user_id=%s event_type=%s rule_name=%s",
+                    payload.user_id,
+                    payload.event_type,
+                    rule.name,
+                )
                 await self._send_stub(
                     user_id=payload.user_id,
                     template_name=rule.action.template_name,
                     channel=rule.action.channel,
                     reason=rule.action.reason,
+                    logger=logger,
                 )
 
             await self._store.insert_decision(
@@ -85,10 +102,20 @@ class MessageRouterService:
         )
         return {"decision_count": len(decisions), "decisions": decisions}
 
-    async def get_user_audit(self, user_id: str) -> dict[str, Any]:
+    async def get_user_audit(
+        self,
+        user_id: str,
+        logger: AppLogger,
+    ) -> dict[str, Any]:
         """Fetch recent events and decisions for audit output."""
         events = await self._store.get_recent_events(user_id=user_id)
         decisions = await self._store.get_recent_decisions(user_id=user_id)
+        logger.info(
+            "User audit requested | user_id=%s events=%s decisions=%s",
+            user_id,
+            len(events),
+            len(decisions),
+        )
         return {
             "user_id": user_id,
             "recent_events": events,
@@ -102,6 +129,7 @@ class MessageRouterService:
         template_name: str,
         channel: str,
         reason: str,
+        logger: AppLogger,
     ) -> None:
         """Dispatch a stub notification to the selected channel."""
         if channel == "email":

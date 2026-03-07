@@ -1,0 +1,15 @@
+{
+  "user_id": "u_10001",
+  "event_type": "payment_initiated",
+  "event_timestamp": "2025-10-16T09:35:00Z",
+  "properties": {
+    "amount": 99.99,
+    "attempt_number": 1
+  },
+  "user_traits": {
+    "email": "new.user@example.com",
+    "country": "DE",
+    "marketing_opt_in": true,
+    "risk_segment": "LOW"
+  }
+}

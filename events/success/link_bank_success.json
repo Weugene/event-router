@@ -1,0 +1,12 @@
+{
+  "user_id": "u_10001",
+  "event_type": "link_bank_success",
+  "event_timestamp": "2025-10-16T09:30:00Z",
+  "properties": {},
+  "user_traits": {
+    "email": "new.user@example.com",
+    "country": "DE",
+    "marketing_opt_in": true,
+    "risk_segment": "LOW"
+  }
+}

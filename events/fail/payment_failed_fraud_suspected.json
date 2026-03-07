@@ -1,0 +1,16 @@
+{
+  "user_id": "u_98765",
+  "event_type": "payment_failed",
+  "event_timestamp": "2025-11-03T08:15:00Z",
+  "properties": {
+    "amount": 240.5,
+    "attempt_number": 1,
+    "failure_reason": "FRAUD_SUSPECTED"
+  },
+  "user_traits": {
+    "email": "alex@example.com",
+    "country": "US",
+    "marketing_opt_in": false,
+    "risk_segment": "HIGH"
+  }
+}

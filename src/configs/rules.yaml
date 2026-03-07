@@ -3,7 +3,7 @@ signup_completed:
     description: Send welcome email if the user opted into marketing
     trigger_event: signup_completed
     conditions:
-      - "$json.user_traits.marketing_opt_in == True"
+      - "$json.user_traits.marketing_opt_in == true"
     action:
       template_name: WELCOME_EMAIL
       channel: email

@@ -1,0 +1,12 @@
+{
+  "user_id": "u_10001",
+  "event_type": "signup_completed",
+  "event_timestamp": "2025-10-15T12:00:00Z",
+  "properties": {},
+  "user_traits": {
+    "email": "new.user@example.com",
+    "country": "DE",
+    "marketing_opt_in": true,
+    "risk_segment": "LOW"
+  }
+}
