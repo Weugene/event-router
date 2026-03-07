@@ -1,0 +1,15 @@
+WELCOME_EMAIL:
+  channel: email
+  description: Welcome email after signup.
+
+BANK_LINK_NUDGE_SMS:
+  channel: sms
+  description: Nudge after successful bank linking.
+
+INSUFFICIENT_FUNDS_EMAIL:
+  channel: email
+  description: Inform user about failed payment due to insufficient funds.
+
+HIGH_RISK_ALERT:
+  channel: internal_alert
+  description: Internal alert for CX escalation.

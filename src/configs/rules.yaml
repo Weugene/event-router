@@ -1,0 +1,50 @@
+signup_completed:
+  - name: welcome_email
+    description: Send welcome email if the user opted into marketing
+    trigger_event: signup_completed
+    conditions:
+      - "$json.user_traits.marketing_opt_in == True"
+    action:
+      template_name: WELCOME_EMAIL
+      channel: email
+      reason: "signup_completed + marketing_opt_in=true"
+    suppression:
+      type: once_ever
+
+link_bank_success:
+  - name: bank_link_nudge
+    description: Send SMS if bank was linked within 24 hours of signup
+    trigger_event: link_bank_success
+    conditions:
+      - "event_within('signup_completed', hours=24)"
+    action:
+      template_name: BANK_LINK_NUDGE_SMS
+      channel: sms
+      reason: "link_bank_success within 24h of signup_completed"
+    suppression:
+      type: once_ever
+
+payment_failed:
+  - name: insufficient_funds_email
+    description: Notify user about insufficient funds
+    trigger_event: payment_failed
+    conditions:
+      - "$json.properties.failure_reason == 'INSUFFICIENT_FUNDS'"
+    action:
+      template_name: INSUFFICIENT_FUNDS_EMAIL
+      channel: email
+      reason: "payment_failed due to insufficient funds"
+    suppression:
+      type: once_per_day
+
+  - name: high_risk_alert
+    description: Escalate after 3 payment attempts
+    trigger_event: payment_failed
+    conditions:
+      - "$json.properties.attempt_number >= 3"
+    action:
+      template_name: HIGH_RISK_ALERT
+      channel: internal_alert
+      reason: "payment_failed attempt_number >= 3"
+    suppression:
+      type: once_ever

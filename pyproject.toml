@@ -1,0 +1,45 @@
+[project]
+name = "event-router"
+version = "0.1.0"
+description = "Marketing event router service for lifecycle messaging."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.116.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.10.0",
+    "pyyaml>=6.0.2",
+    "python-dotenv>=1.1.1",
+    "uvicorn[standard]>=0.35.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.13.0",
+    "uv"
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
