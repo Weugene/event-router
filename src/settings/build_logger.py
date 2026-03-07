@@ -7,12 +7,14 @@ from src.settings.configuration_singleton import get_config
 
 class TraceIdFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
+        """Ensure each log record includes a trace_id attribute."""
         if not hasattr(record, "trace_id"):
             record.trace_id = get_trace_id()
         return True
 
 
 def build_logger(name: str = "event-router") -> logging.Logger:
+    """Build and configure a reusable application logger."""
     config = get_config()
     logger = logging.getLogger(name)
     logger.setLevel(config.log_level.upper())
@@ -27,3 +29,5 @@ def build_logger(name: str = "event-router") -> logging.Logger:
         logger.addHandler(handler)
 
     return logger
+
+logger = build_logger(name="event-router")

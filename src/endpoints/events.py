@@ -12,6 +12,7 @@ async def ingest_event(
     payload: EventPayload,
     service: MessageRouterService = Depends(get_message_router_service),
 ) -> EventIngestResponse:
+    """Validate, process, and acknowledge an incoming lifecycle event."""
     result = await service.process_event(payload)
     return EventIngestResponse(
         status="accepted",

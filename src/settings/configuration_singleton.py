@@ -24,6 +24,7 @@ class AppConfig(BaseSettings):
 
     @property
     def postgres_dsn(self) -> str:
+        """Compose the PostgreSQL DSN from configured fields."""
         return (
             f"postgresql://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
@@ -32,4 +33,5 @@ class AppConfig(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
+    """Return a cached application configuration instance."""
     return AppConfig()

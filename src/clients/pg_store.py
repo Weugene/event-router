@@ -8,9 +8,11 @@ from src.clients.asyncpg_client import AsyncPGClient
 
 class PGStore:
     def __init__(self, client: AsyncPGClient) -> None:
+        """Initialize the store with a shared PostgreSQL client."""
         self._client = client
 
     async def init_schema(self) -> None:
+        """Create database tables and indexes if they do not exist."""
         query = """
         CREATE TABLE IF NOT EXISTS events (
             id BIGSERIAL PRIMARY KEY,
@@ -56,6 +58,7 @@ class PGStore:
         properties: dict[str, Any],
         user_traits: dict[str, Any],
     ) -> None:
+        """Persist a single inbound event record."""
         query = """
         INSERT INTO events (user_id, event_type, event_timestamp, properties, user_traits)
         VALUES ($1, $2, $3, $4::jsonb, $5::jsonb)
@@ -73,6 +76,7 @@ class PGStore:
             )
 
     async def get_latest_event(self, *, user_id: str, event_type: str) -> dict[str, Any] | None:
+        """Return the most recent event for a user and event type."""
         query = """
         SELECT user_id, event_type, event_timestamp, properties, user_traits, created_at
         FROM events
@@ -85,6 +89,7 @@ class PGStore:
         return dict(row) if row is not None else None
 
     async def get_recent_events(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        """Return recent events for a user ordered by event time."""
         query = """
         SELECT user_id, event_type, event_timestamp, properties, user_traits, created_at
         FROM events
@@ -107,6 +112,7 @@ class PGStore:
         suppression_reason: str | None,
         decided_at: datetime,
     ) -> None:
+        """Persist a single message decision record."""
         query = """
         INSERT INTO message_decisions (
             user_id, template_name, channel, decision_status, reason, suppression_reason, decided_at
@@ -128,6 +134,7 @@ class PGStore:
     async def get_latest_sent_decision(
         self, *, user_id: str, template_name: str
     ) -> dict[str, Any] | None:
+        """Return the latest sent decision for a user/template pair."""
         query = """
         SELECT user_id, template_name, channel, decision_status, reason, suppression_reason, decided_at, created_at
         FROM message_decisions
@@ -140,6 +147,7 @@ class PGStore:
         return dict(row) if row is not None else None
 
     async def get_recent_decisions(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        """Return recent decisions for a user ordered by decision time."""
         query = """
         SELECT user_id, template_name, channel, decision_status, reason, suppression_reason, decided_at, created_at
         FROM message_decisions

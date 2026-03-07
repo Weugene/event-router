@@ -12,5 +12,6 @@ async def get_user_audit(
     user_id: str,
     service: MessageRouterService = Depends(get_message_router_service),
 ) -> UserAuditResponse:
+    """Return recent events and message decisions for a user."""
     audit_data = await service.get_user_audit(user_id)
     return UserAuditResponse(**audit_data)

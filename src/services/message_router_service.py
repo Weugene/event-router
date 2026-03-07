@@ -6,9 +6,7 @@ from src.clients.pg_store import PGStore
 from src.clients.sms_notifier import SmsNotifier
 from src.schemas import EventPayload
 from src.services.rule_engine import RuleEngine
-from src.settings.build_logger import build_logger
-
-logger = build_logger(__name__)
+from src.settings.build_logger import logger
 
 
 class MessageRouterService:
@@ -20,12 +18,14 @@ class MessageRouterService:
         email_notifier: EmailNotifier,
         sms_notifier: SmsNotifier,
     ) -> None:
+        """Initialize service dependencies for event processing and notifications."""
         self._store = store
         self._rule_engine = rule_engine
         self._email_notifier = email_notifier
         self._sms_notifier = sms_notifier
 
     async def process_event(self, payload: EventPayload) -> dict[str, Any]:
+        """Persist an event, evaluate rules, and record resulting decisions."""
         event_timestamp_utc = self._to_utc(payload.event_timestamp)
         await self._store.insert_event(
             user_id=payload.user_id,
@@ -86,6 +86,7 @@ class MessageRouterService:
         return {"decision_count": len(decisions), "decisions": decisions}
 
     async def get_user_audit(self, user_id: str) -> dict[str, Any]:
+        """Fetch recent events and decisions for audit output."""
         events = await self._store.get_recent_events(user_id=user_id)
         decisions = await self._store.get_recent_decisions(user_id=user_id)
         return {
@@ -102,6 +103,7 @@ class MessageRouterService:
         channel: str,
         reason: str,
     ) -> None:
+        """Dispatch a stub notification to the selected channel."""
         if channel == "email":
             await self._email_notifier.send(
                 user_id=user_id, template_name=template_name, reason=reason
@@ -124,6 +126,7 @@ class MessageRouterService:
 
     @staticmethod
     def _to_utc(value: datetime) -> datetime:
+        """Normalize datetimes to UTC."""
         if value.tzinfo is None:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)

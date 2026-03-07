@@ -57,6 +57,7 @@ class Rule:
 
 
 def _to_namespace(value: Any) -> Any:
+    """Recursively convert dictionaries into namespaces for dot-access."""
     if isinstance(value, dict):
         return SimpleNamespace(**{k: _to_namespace(v) for k, v in value.items()})
     if isinstance(value, list):
@@ -66,14 +67,17 @@ def _to_namespace(value: Any) -> Any:
 
 class RuleEngine:
     def __init__(self, rules_file_path: str, store: PGStore) -> None:
+        """Load rule definitions and prepare rule lookup by trigger event."""
         self._rules_file_path = rules_file_path
         self._store = store
         self._rules_by_event: dict[str, list[Rule]] = self._load_rules()
 
     def get_rules_for_event(self, event_type: str) -> list[Rule]:
+        """Return all rules configured for the given event type."""
         return self._rules_by_event.get(event_type, [])
 
     def _load_rules(self) -> dict[str, list[Rule]]:
+        """Read and parse YAML rules into internal dataclass structures."""
         with open(self._rules_file_path, encoding="utf-8") as file:
             raw = yaml.safe_load(file) or {}
 
@@ -95,6 +99,7 @@ class RuleEngine:
         return rules_by_event
 
     async def evaluate_rule(self, rule: Rule, event: EventPayload) -> bool:
+        """Evaluate all conditions in a rule against the event payload."""
         for condition in rule.conditions:
             ok = await self._evaluate_condition(condition=condition, event=event)
             if not ok:
@@ -102,6 +107,7 @@ class RuleEngine:
         return True
 
     async def _evaluate_condition(self, condition: str, event: EventPayload) -> bool:
+        """Safely evaluate a single rule condition expression."""
         expression = condition.replace("$json.", "json.")
         node = ast.parse(expression, mode="eval")
         for item in ast.walk(node):
@@ -112,6 +118,7 @@ class RuleEngine:
                     raise ValueError("Only event_within() call is allowed in conditions.")
 
         async def event_within(event_type: str, *, hours: int) -> bool:
+            """Check whether a previous event occurred within the time window."""
             previous_event = await self._store.get_latest_event(
                 user_id=event.user_id, event_type=event_type
             )
@@ -145,6 +152,7 @@ class RuleEngine:
         suppression_type: str,
         event_timestamp: datetime,
     ) -> tuple[bool, str | None]:
+        """Determine if a message should be suppressed by configured strategy."""
         if suppression_type == "none":
             return False, None
 
