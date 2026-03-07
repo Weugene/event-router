@@ -13,10 +13,10 @@ class TraceIdFilter(logging.Filter):
         return True
 
 
-def build_logger(name: str = "event-router") -> logging.Logger:
+def build_logger() -> logging.Logger:
     """Build and configure a reusable application logger."""
     config = get_config()
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(config.app_name)
     logger.setLevel(config.log_level.upper())
 
     if not logger.handlers:
@@ -30,4 +30,4 @@ def build_logger(name: str = "event-router") -> logging.Logger:
 
     return logger
 
-logger = build_logger(name="event-router")
+logger = build_logger()

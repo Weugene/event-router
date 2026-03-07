@@ -51,6 +51,14 @@ docker compose up --build
 
 Service: `http://localhost:8000`
 
+## API Documentation
+
+After the app is running, open:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+- OpenAPI JSON: `http://localhost:8000/openapi.json`
+
 ## Run Locally (without Docker)
 
 ```bash
