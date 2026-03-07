@@ -3,6 +3,7 @@ name = "event-router"
 version = "0.1.0"
 description = "Marketing event router service for lifecycle messaging."
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "asyncpg>=0.30.0",
