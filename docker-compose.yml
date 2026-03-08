@@ -1,5 +1,23 @@
 services:
   app:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: event-router-app-dev
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app-prod:
+    profiles: ["prod"]
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,9 +26,7 @@ services:
       - .env
     ports:
       - "8000:8000"
-    volumes:
-      - ./src:/app/src
-    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src
+    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-4}
     depends_on:
       postgres:
         condition: service_healthy

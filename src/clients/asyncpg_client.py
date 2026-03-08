@@ -13,11 +13,21 @@ class AsyncPGClient:
     async def connect(self) -> None:
         """Create the asyncpg pool if it is not initialized."""
         if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                dsn=self._config.postgres_dsn,
-                min_size=self._config.postgres_min_pool_size,
-                max_size=self._config.postgres_max_pool_size,
-            )
+            try:
+                self._pool = await asyncpg.create_pool(
+                    dsn=self._config.postgres_dsn,
+                    min_size=self._config.postgres_min_pool_size,
+                    max_size=self._config.postgres_max_pool_size,
+                )
+            except (asyncpg.PostgresError, OSError, TimeoutError) as exc:
+                reason = str(exc).strip() or exc.__class__.__name__
+                raise RuntimeError(
+                    "Could not connect to PostgreSQL "
+                    f"({self._config.postgres_host}:{self._config.postgres_port}/"
+                    f"{self._config.postgres_db} as {self._config.postgres_user}). "
+                    "Check that PostgreSQL is running, connection settings are correct, "
+                    f"and network/SSL access is allowed. Underlying error: {reason}"
+                ) from None
 
     async def close(self) -> None:
         """Close the asyncpg pool if it is open."""

@@ -49,8 +49,9 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title=config.app_name, lifespan=lifespan)
 
-app.add_middleware(ContextLoggerMiddleware, logger=logger)
 app.add_middleware(TimeoutMiddleware, timeout_seconds=config.app_timeout_seconds)
+app.add_middleware(ContextLoggerMiddleware, logger=logger)
+
 app.include_router(events_router)
 app.include_router(audit_router)
 

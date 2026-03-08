@@ -47,4 +47,4 @@ payment_failed:
       channel: internal_alert
       reason: "payment_failed attempt_number >= 3"
     suppression:
-      type: once_ever
+      type: once_per_day

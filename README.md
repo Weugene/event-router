@@ -43,13 +43,25 @@ src/
   main.py
 ```
 
-## Run Locally (Docker Compose)
+## Run Everything with Docker Compose
 
 ```bash
-docker compose up --build
+# Development (app + postgres, auto-reload, single worker)
+docker compose --profile dev up --build
+
+# Production-like (app + postgres, multiple workers, no reload)
+docker compose --profile prod up --build
 ```
 
 Service: `http://localhost:8000`
+
+Stop and clean up:
+
+```bash
+docker compose --profile dev down
+# or
+docker compose --profile prod down
+```
 
 ## API Documentation
 
@@ -61,11 +73,41 @@ After the app is running, open:
 
 ## Run Locally (without Docker)
 
+This mode requires an external PostgreSQL instance (for example, `docker compose up -d postgres`)
+and matching DB env values (for host run use `POSTGRES_HOST=localhost`).
+
+```bash
+# Install uv (macOS/Linux)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create and activate virtual environment
+uv venv --python 3.12
+source .venv/bin/activate
+
+# Sync dependencies (including dev tools)
+uv sync --dev
+
+# Run API
+uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Alternative with pip:
+
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+## Run Tests
+
+```bash
+# Recommended: run tests in uv-managed environment
+uv run pytest tests
+
+# Alternative if using a local venv
+pytest tests
 ```
 
 ## Example: POST Event

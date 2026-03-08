@@ -143,6 +143,13 @@ class RuleEngine:
         context = {
             "json": _to_namespace(event.model_dump()),
             "event_within": event_within,
+            # Support both Python-style and YAML/JSON-style literals in rules.
+            "True": True,
+            "False": False,
+            "None": None,
+            "true": True,
+            "false": False,
+            "null": None,
         }
         result = eval(compile(node, "<condition>", "eval"), {"__builtins__": {}}, context)
         if hasattr(result, "__await__"):
