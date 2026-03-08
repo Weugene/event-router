@@ -4,11 +4,46 @@ Small FastAPI service that ingests lifecycle events, applies configurable messag
 
 ## Functional Requirements
 
-- Accept inbound events via HTTP (`POST /events`) with a strict request schema.
-- Apply declarative rules from YAML (`src/configs/rules.yaml`).
-- Suppress duplicates (`once_ever`, `once_per_day`) in UTC.
-- Produce outbound send intents (email/sms/internal alert) via notifier stubs.
-- Expose user audit trail (`GET /audit/{user_id}`) with recent events and sent/suppressed decisions.
+### A. Accept inbound events
+
+- Ingest JSON events via `POST /events` with validated schema.
+- Supported `event_type` values:
+  - `signup_completed`
+  - `link_bank_success`
+  - `payment_initiated`
+  - `payment_failed`
+
+### B. Apply messaging rules (declarative)
+
+- Rules are declarative/configurable in `src/configs/rules.yaml` (not hardcoded branching logic).
+- Implemented rule set:
+  - If `signup_completed` and `user_traits.marketing_opt_in == true`, send `WELCOME_EMAIL`.
+  - If `link_bank_success` occurs within 24h of `signup_completed`, send `BANK_LINK_NUDGE_SMS`.
+  - If `payment_failed` and `properties.failure_reason == "INSUFFICIENT_FUNDS"`, send `INSUFFICIENT_FUNDS_EMAIL` once per user per calendar day.
+  - If `payment_failed` and `properties.attempt_number >= 3`, send internal-only `HIGH_RISK_ALERT`.
+
+### C. De-duplication / suppression
+
+- Suppression policies supported:
+  - `once_ever` (e.g., `WELCOME_EMAIL`)
+  - `once_per_day` in UTC (e.g., `INSUFFICIENT_FUNDS_EMAIL`, `HIGH_RISK_ALERT`)
+- Duplicate sends are recorded as `suppressed` with a reason in audit data.
+
+### D. Produce outbound send request
+
+- Instead of calling a real provider, notifier stubs record intended sends with:
+  - `user_id`
+  - `template_name`
+  - `channel` (`email`, `sms`, `internal_alert`)
+  - `timestamp`
+  - `reason` (short explanation for why the message was sent)
+
+### E. Expose audit/debug endpoint
+
+- `GET /audit/{user_id}` returns:
+  - recent events seen for the user
+  - message decisions that were `sent` or `suppressed`
+  - suppression explanation (for example, already sent in current UTC day)
 
 ## Non-functional Requirements
 

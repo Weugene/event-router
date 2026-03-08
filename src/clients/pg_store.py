@@ -87,7 +87,7 @@ class PGStore:
         """
         async with self._client.pool.acquire() as conn:
             row = await conn.fetchrow(query, user_id, event_type)
-        return dict(row) if row is not None else None
+        return self._deserialize_event_row(dict(row)) if row is not None else None
 
     @async_ttl_cache(3)
     async def get_recent_events(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
@@ -101,7 +101,7 @@ class PGStore:
         """
         async with self._client.pool.acquire() as conn:
             rows: Sequence[Any] = await conn.fetch(query, user_id, limit)
-        return [dict(row) for row in rows]
+        return [self._deserialize_event_row(dict(row)) for row in rows]
 
     async def insert_decision(
         self,
@@ -161,3 +161,16 @@ class PGStore:
         async with self._client.pool.acquire() as conn:
             rows: Sequence[Any] = await conn.fetch(query, user_id, limit)
         return [dict(row) for row in rows]
+
+    @staticmethod
+    def _deserialize_event_row(row: dict[str, Any]) -> dict[str, Any]:
+        """Convert JSONB text fields to Python dicts for API responses."""
+        for field in ("properties", "user_traits"):
+            value = row.get(field)
+            if isinstance(value, str):
+                try:
+                    row[field] = json.loads(value)
+                except json.JSONDecodeError:
+                    # Keep original value if payload cannot be decoded.
+                    pass
+        return row
