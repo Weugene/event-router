@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from src.clients.asyncpg_client import AsyncPGClient
+from src.utils.async_ttl_cache import async_ttl_cache
 
 
 class PGStore:
@@ -88,6 +89,7 @@ class PGStore:
             row = await conn.fetchrow(query, user_id, event_type)
         return dict(row) if row is not None else None
 
+    @async_ttl_cache(3)
     async def get_recent_events(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent events for a user ordered by event time."""
         query = """
@@ -146,6 +148,7 @@ class PGStore:
             row = await conn.fetchrow(query, user_id, template_name)
         return dict(row) if row is not None else None
 
+    @async_ttl_cache(3)
     async def get_recent_decisions(self, *, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent decisions for a user ordered by decision time."""
         query = """
