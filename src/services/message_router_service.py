@@ -106,13 +106,15 @@ class MessageRouterService:
         self,
         user_id: str,
         logger: AppLogger,
+        limit: int = 50,
     ) -> dict[str, Any]:
         """Fetch recent events and decisions for audit output."""
-        events = await self._store.get_recent_events(user_id=user_id)
-        decisions = await self._store.get_recent_decisions(user_id=user_id)
+        events = await self._store.get_recent_events(user_id=user_id, limit=limit)
+        decisions = await self._store.get_recent_decisions(user_id=user_id, limit=limit)
         logger.info(
-            "User audit requested | user_id=%s events=%s decisions=%s",
+            "User audit requested | user_id=%s limit=%s events=%s decisions=%s",
             user_id,
+            limit,
             len(events),
             len(decisions),
         )

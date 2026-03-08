@@ -165,6 +165,9 @@ class RuleEngine:
         event_timestamp: datetime,
     ) -> tuple[bool, str | None]:
         """Determine if a message should be suppressed by configured strategy."""
+        if suppression_type == "always":
+            return True, "suppressed by rule configuration"
+
         if suppression_type == "none":
             return False, None
 

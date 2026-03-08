@@ -30,7 +30,7 @@ def test_post_events_valid_payload_returns_accepted(client: TestClient):
     assert data["status"] == "accepted"
     assert len(data["notifications"]) == 1
     assert data["notifications"][0]["template_name"] == "INSUFFICIENT_FUNDS_EMAIL"
-    assert data["notifications"][0]["status"] in {"applied", "suppressed"}
+    assert data["notifications"][0]["status"] == "applied"
 
 
 def test_post_events_invalid_payload_is_rejected(client: TestClient):
@@ -55,6 +55,10 @@ def test_post_events_invalid_payload_is_rejected(client: TestClient):
     )
 
     assert response.status_code == 422
+    data = response.json()
+    assert data["detail"][0]["msg"] == "Field required"
+    assert data["detail"][0]["loc"] == ["body", "payment_failed", "user_traits", "email"]
+    assert data["detail"][0]["type"] == "missing"
 
 
 def test_get_audit_returns_events_and_decisions(client: TestClient):
@@ -78,6 +82,11 @@ def test_get_audit_returns_events_and_decisions(client: TestClient):
     }
     ingest_response = client.post("/events", json=payload)
     assert ingest_response.status_code == 200
+    data = ingest_response.json()
+    assert data["status"] == "accepted"
+    assert len(data["notifications"]) == 1
+    assert data["notifications"][0]["template_name"] == "INSUFFICIENT_FUNDS_EMAIL"
+    assert data["notifications"][0]["status"] == "applied"
 
     audit_response = client.get(f"/audit/{user_id}")
     assert audit_response.status_code == 200
@@ -85,3 +94,42 @@ def test_get_audit_returns_events_and_decisions(client: TestClient):
     assert data["user_id"] == user_id
     assert len(data["recent_events"]) >= 1
     assert len(data["decisions"]) >= 1
+
+
+def test_get_audit_limit_query_param_rejects_values_over_max(client: TestClient):
+    response = client.get("/audit/u_5?limit=61")
+
+    assert response.status_code == 422
+
+
+def test_get_audit_limit_query_param_applies_limit(client: TestClient):
+    user_id = "u_limit"
+    event_time = datetime(2026, 3, 8, 12, 0, tzinfo=UTC)
+
+    for minute in range(3):
+        payload = {
+            "user_id": user_id,
+            "event_type": "payment_failed",
+            "event_timestamp": (
+                event_time.replace(minute=event_time.minute + minute).isoformat()
+            ),
+            "properties": {
+                "amount": 15,
+                "attempt_number": 2,
+                "failure_reason": "INSUFFICIENT_FUNDS",
+            },
+            "user_traits": {
+                "email": "u5@example.com",
+                "country": "PT",
+                "marketing_opt_in": True,
+                "risk_segment": "LOW",
+            },
+        }
+        ingest_response = client.post("/events", json=payload)
+        assert ingest_response.status_code == 200
+
+    audit_response = client.get(f"/audit/{user_id}?limit=2")
+    assert audit_response.status_code == 200
+    data = audit_response.json()
+    assert len(data["recent_events"]) == 2
+    assert len(data["decisions"]) == 2

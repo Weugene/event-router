@@ -72,12 +72,46 @@ async def test_link_bank_within_24h_matches_rule_and_once_ever_suppresses_repeat
 
     assert signup_result["decision_count"] == 1
     assert signup_result["decisions"][0]["template_name"] == "WELCOME_EMAIL"
+    assert signup_result["decisions"][0]["channel"] == "email"
     assert signup_result["decisions"][0]["status"] == "sent"
 
     assert first_link_result["decision_count"] == 1
     assert first_link_result["decisions"][0]["template_name"] == "BANK_LINK_NUDGE_SMS"
+    assert first_link_result["decisions"][0]["channel"] == "sms"
     assert first_link_result["decisions"][0]["status"] == "sent"
 
     assert second_link_result["decision_count"] == 1
     assert second_link_result["decisions"][0]["status"] == "suppressed"
     assert "already sent before" in (second_link_result["decisions"][0]["suppression_reason"] or "")
+
+
+@pytest.mark.anyio
+async def test_signup_completed_marketing_opt_out_does_not_notify_and_is_audited(
+    message_router_service, app_logger
+):
+    signup = SignupCompletedEvent(
+        user_id="u_6",
+        event_type="signup_completed",
+        event_timestamp=datetime(2026, 3, 8, 9, 0, tzinfo=UTC),
+        properties={},
+        user_traits={
+            "email": "u6@example.com",
+            "country": "PT",
+            "marketing_opt_in": False,
+            "risk_segment": "LOW",
+        },
+    )
+
+    result = await message_router_service.process_event(signup, app_logger)
+    audit = await message_router_service.get_user_audit(signup.user_id, app_logger)
+
+    assert result["decision_count"] == 1
+    assert result["decisions"][0]["template_name"] == "WELCOME_EMAIL"
+    assert result["decisions"][0]["status"] == "suppressed"
+    assert result["decisions"][0]["suppression_reason"] == "suppressed by rule configuration"
+
+    assert len(audit["recent_events"]) == 1
+    assert len(audit["decisions"]) == 1
+    assert audit["decisions"][0]["template_name"] == "WELCOME_EMAIL"
+    assert audit["decisions"][0]["decision_status"] == "suppressed"
+    assert audit["decisions"][0]["reason"] == "signup_completed + marketing_opt_in=false"

@@ -61,6 +61,11 @@ Stop and clean up:
 docker compose --profile dev down
 # or
 docker compose --profile prod down
+
+# Remove containers + network + Postgres volume (deletes DB data)
+docker compose --profile dev down -v
+# or
+docker compose --profile prod down -v
 ```
 
 ## API Documentation

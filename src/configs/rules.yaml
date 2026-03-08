@@ -11,6 +11,18 @@ signup_completed:
     suppression:
       type: once_ever
 
+  - name: welcome_email_opt_out
+    description: Do not send welcome email if the user opted out of marketing
+    trigger_event: signup_completed
+    conditions:
+      - "$json.user_traits.marketing_opt_in == false"
+    action:
+      template_name: WELCOME_EMAIL
+      channel: email
+      reason: "signup_completed + marketing_opt_in=false"
+    suppression:
+      type: always
+
 link_bank_success:
   - name: bank_link_nudge
     description: Send SMS if bank was linked within 24 hours of signup
